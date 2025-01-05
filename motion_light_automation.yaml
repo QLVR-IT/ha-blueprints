@@ -1,14 +1,14 @@
 blueprint:
   name: Motion Light Automation
-  description: 'versie 2.0 - 05-01-2025
+  description: 'Versie 2.0 - 05-01-2025  
 
-    Verlichting schakelen op basis van beweging. Deze Blueprint moet gebruikt worden
-    i.c.m. de Motion Light Timer Blueprint. De motion sensor meld occupancy naar status
-    on bij beweging. Wanneer c.a. 1 minuut geen beweging gezien is, gaat deze weer
-    naar off. Wanneer deze naar off gaat start de timer als buffer om het licht nog
-    even aan te laten. Als er opnieuw beweging is, start de timer opnieuw. Middels
-    een input_boolean kan ingesteld worden of licht wel/niet op beweging moet schakelen.
-    Sensoren waarvan bekend is dat deze Blueprint mee werkt: - Sonoff SNZB-03'
+    Verlichting schakelen op basis van beweging. Deze Blueprint moet gebruikt worden i.c.m. de Motion Light Timer Blueprint.  
+    De motion sensor meld occupancy naar status on bij beweging. Wanneer c.a. 1 minuut geen beweging gezien is, gaat deze weer naar off. Wanneer deze naar off gaat start de timer als buffer om het licht nog even aan te laten. Als er opnieuw beweging is, start de timer opnieuw.  
+    Middels een input_boolean kan ingesteld worden of licht wel/niet op beweging moet schakelen.
+    Sensoren waarvan bekend is dat deze Blueprint mee werkt:  
+    - Sonoff SNZB-03
+    
+    https://github.com/QLVR-IT/ha-blueprints'
   domain: automation
   input:
     motion_sensor:
