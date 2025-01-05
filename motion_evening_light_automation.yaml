@@ -149,12 +149,12 @@ variables:
     condition: state
     entity_id: !input nobody_home
     state: "off"
-  - &condition_after_sunset-30
+  - &condition_after_sunset
     alias: "Na zonsondergang -30 minuten"
     condition: sun
     after: sunset
     after_offset: -00:30:00
-  - &condition_before_sunrise+30
+  - &condition_before_sunrise
     alias: "Voor zonsopgang"
     condition: sun
     before: sunrise
@@ -182,8 +182,8 @@ action:
     - *condition_nobody_home_off
     - *condition_occupancy_on
     - or:
-      - *condition_after_sunset-30
-      - *condition_before_sunrise+30
+      - *condition_after_sunset
+      - *condition_before_sunrise
     sequence:
     - *turn_on
   default:
