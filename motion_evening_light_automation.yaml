@@ -1,7 +1,7 @@
 blueprint:
   name: QLVR-IT - Motion Evening Light Automation
   description: |
-    # Motion triggerd Light Automation only 30 minutes before sunset and 30 minutes after sunrise
+    # Motion triggerd Light Automation only 30 minutes before sunset and 20 minutes after sunrise
 
     Verlichting schakelen op basis van beweging, wanneer de zon onder de horizon is. Deze Blueprint moet gebruikt worden i.c.m. de Motion Light Timer Blueprint.
     De motion sensor meld occupancy naar status on bij beweging. Wanneer c.a. 1 minuut geen beweging gezien is, gaat deze weer naar off. Wanneer deze naar off gaat start de timer als buffer om het licht nog even aan te laten. Als er opnieuw beweging is, start de timer opnieuw.
@@ -9,7 +9,7 @@ blueprint:
 
     📕 Meer info en blueprints [hier](https://github.com/QLVR-IT/ha-blueprints).
 
-    ℹ️ Versie 2025.01.05
+    ℹ️ Versie 2025.01.06
   source_url: https://github.com/QLVR-IT/ha-blueprints/blob/main/motion_evening_light_automation.yaml
   domain: automation
   homeassistant:
@@ -149,16 +149,13 @@ variables:
     condition: state
     entity_id: !input nobody_home
     state: "off"
-  - &condition_after_sunset
-    alias: "Na zonsondergang -30 minuten"
-    condition: sun
-    after: sunset
-    after_offset: -00:30:00
-  - &condition_before_sunrise
-    alias: "Voor zonsopgang"
+  - &condition_dark
+    alias: "Donker"
     condition: sun
     before: sunrise
-    before_offset: 00:30:00
+    after: sunset
+    after_offset: "-00:30:00"
+    before_offset: "00:20:00"
 action:
 - choose:
   - alias: Verlichting uit wanneer slaap mode actief of niemand thuis is
@@ -181,9 +178,7 @@ action:
     - *condition_sleep_off
     - *condition_nobody_home_off
     - *condition_occupancy_on
-    - or:
-      - *condition_after_sunset
-      - *condition_before_sunrise
+    - *condition_dark
     sequence:
     - *turn_on
   default:
