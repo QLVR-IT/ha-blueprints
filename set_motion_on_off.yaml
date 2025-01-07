@@ -1,0 +1,163 @@
+blueprint:
+  name: QLVR-IT - Set Motion detection on or off
+  description: |
+    # Set Motion detection on or off
+
+    Deze blueprint zorgt ervoor dat de input_boolean welke gebruikt wordt om motion detection in of uit te schakelen, juist gezet wordt.
+    Wanneer slaapmode of niemand thuis actief is, wordt de boolean motion detection uitgeschakeld. Wanneer slaapmode uit staat en er iemand thuis is wordt motion detection actief. Optioneel kan er ook gekozen worden om bewegingsdetectie overdag (met instelbare offset) uit te schakelen.
+
+    📕 Meer info en blueprints [hier](https://github.com/QLVR-IT/ha-blueprints).
+
+    ℹ️ Versie 2025.01.07
+  source_url: https://github.com/QLVR-IT/ha-blueprints/blob/main/set_motion_on_off.yaml
+  domain: automation
+  homeassistant:
+    min_version: 2024.1.0
+  input:
+    motion_enabled:
+      name: Motion enabled
+      description: Selecteer welke boolean gebruikt wordt om te bepalen of beweging aan of uit staat
+      selector:
+        entity:
+          multiple: false
+          filter:
+            - domain: input_boolean
+    sleepmode:
+      name: Sleep mode
+      description: Selecteer welke boolean gebruikt wordt om te bepalen of de woning in slaapstand staat
+      selector:
+        entity:
+          multiple: false
+          filter:
+            - domain: input_boolean
+    nobody_home:
+      name: Nobody home
+      description: Selecteer welke boolean gebruikt wordt om te bepalen of er niemand thuis is
+      selector:
+        entity:
+          multiple: false
+          filter:
+            - domain: input_boolean
+    day_evening_check:
+      name: Day Evening check
+      description: Moet er gecontroleerd worden of het overdag is of avond
+      selector:
+        boolean:
+    sun_offset:
+      name: Offset of after sunrise time for daytime
+      description: Offset tijd voor zonsopkomst en ondergang (negatieve waarde = eerder dan zonsopkomst en zonsondergang)
+      selector:
+        time:
+max_exceeded: silent
+trace:
+  stored_traces: 25
+
+triggers:
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
+  - trigger: state
+    entity_id:
+      - !input sleepmode
+      - !input nobody_home
+  - trigger: sun
+    event: sunset
+    offset: !input sun_offset
+  - trigger: sun
+    event: sunrise
+    offset: !input sun_offset
+
+variables:
+  motion_enabled: !input motion_enabled
+  sleepmode: !input sleepmode
+  nobody_home: !input nobody_home
+  anchors:
+    # Action anchors ---------------------------------------------------------------
+    - &motion_on
+      alias: "Action anchor: enable motion detection"
+      action: input_boolean.turn_on
+      target:
+        entity_id: !input motion_enabled
+    - &motion_off
+      alias: "Action anchor: disable motion detection"
+      action: input_boolean.turn_off
+      target:
+        entity_id: !input motion_enabled
+    - &sleepmode_on
+      alias: "Condition anchor: sleepmode is on"
+      condition: state
+      entity_id: !input sleepmode
+      state: "on"
+
+    - &sleepmode_off
+      alias: "Condition anchor: sleepmode is off"
+      condition: state
+      entity_id: !input sleepmode
+      state: "off"
+
+    - &nobody_home_on
+      alias: "Condition anchor: nobody_home is on"
+      condition: state
+      entity_id: !input nobody_home
+      state: "on"
+
+    - &nobody_home_off
+      alias: "Condition anchor: nobody_home is off"
+      condition: state
+      entity_id: !input nobody_home
+      state: "off"
+
+    - &daytime
+      alias: "Condition anchor: it is daytime (light)"
+      condition: sun
+      before: sunset
+      after: sunrise
+      after_offset: !input sun_offset
+      before_offset: !input sun_offset
+
+    - &evening
+      alias: "Condition anchor: it is evening (dark)"
+      condition: sun
+      before: sunrise
+      after: sunset
+      after_offset: !input sun_offset
+      before_offset: !input sun_offset
+
+# --- Actions ------------------------------------------------------------------
+action:
+  - choose:
+      - alias: "Action: disable motion when:"
+        conditions:
+          - condition: or
+            conditions:
+              - *sleepmode_on
+              - *nobody_home_on
+              - condition: and
+                conditions:
+                  - *sleepmode_off
+                  - *nobody_home_off
+                  - condition: template
+                    value_template: "{{ bool(day_evening_check) == true }}"
+                  - *daytime
+        sequence:
+          - *motion_off
+
+      - alias: "Action: enable motion when (with evening check):"
+        conditions:
+          - *sleepmode_off
+          - *nobody_home_off
+          - condition: template
+            value_template: "{{ bool(day_evening_check) == true }}"
+          - *evening
+        sequence:
+          - *motion_on
+
+      - alias: "Action: enable motion when (without day/evening check):"
+        conditions:
+          - *sleepmode_off
+          - *nobody_home_off
+          - condition: template
+            value_template: "{{ bool(day_evening_check) == false }}"
+        sequence:
+          - *motion_on
