@@ -8,7 +8,7 @@ blueprint:
 
     📕 Meer info en blueprints [hier](https://github.com/QLVR-IT/ha-blueprints).
 
-    ℹ️ Versie 2025.01.07
+    ℹ️ Versie 2025.01.08
   source_url: https://github.com/QLVR-IT/ha-blueprints/blob/main/set_motion_on_off.yaml
   domain: automation
   homeassistant:
@@ -43,8 +43,13 @@ blueprint:
       description: Moet er gecontroleerd worden of het overdag is of avond
       selector:
         boolean:
-    sun_offset:
-      name: Offset of after sunrise time for daytime
+    sunrise_offset:
+      name: Offset time for daytime
+      description: Offset tijd voor zonsopkomst en ondergang (negatieve waarde = eerder dan zonsopkomst en zonsondergang)
+      selector:
+        time:
+    sunset_offset:
+      name: Offset time for evening
       description: Offset tijd voor zonsopkomst en ondergang (negatieve waarde = eerder dan zonsopkomst en zonsondergang)
       selector:
         time:
@@ -63,15 +68,13 @@ triggers:
       - !input nobody_home
   - trigger: sun
     event: sunset
-    offset: !input sun_offset
+    offset: !input sunrise_offset
   - trigger: sun
     event: sunrise
-    offset: !input sun_offset
+    offset: !input sunrise_offset
 
 variables:
-  motion_enabled: !input motion_enabled
-  sleepmode: !input sleepmode
-  nobody_home: !input nobody_home
+  day_evening_check: !input day_evening_check
   anchors:
     # Action anchors ---------------------------------------------------------------
     - &motion_on
@@ -113,16 +116,16 @@ variables:
       condition: sun
       before: sunset
       after: sunrise
-      after_offset: !input sun_offset
-      before_offset: !input sun_offset
+      after_offset: !input sunrise_offset
+      before_offset: !input sunset_offset
 
     - &evening
       alias: "Condition anchor: it is evening (dark)"
       condition: sun
       before: sunrise
       after: sunset
-      after_offset: !input sun_offset
-      before_offset: !input sun_offset
+      after_offset: !input sunset_offset
+      before_offset: !input sunrise_offset
 
 # --- Actions ------------------------------------------------------------------
 action:
