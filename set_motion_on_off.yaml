@@ -68,7 +68,7 @@ triggers:
       - !input nobody_home
   - trigger: sun
     event: sunset
-    offset: !input sunrise_offset
+    offset: !input sunset_offset
   - trigger: sun
     event: sunrise
     offset: !input sunrise_offset
